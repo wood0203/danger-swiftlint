@@ -22,11 +22,16 @@ RUN npm install -g danger | tee /var/log/danger-js-build.log \
 # Error occurs on running(https://github.com/danger/swift/issues/309)
 # RUN mint install danger/swift@${DANGER_SWIFT_REVISION}
 ARG DANGER_SWIFT_REVISION=master
+ARG DANGER_SWIFT_COMMIT=2be8668364380e0bef4b21feaae6ae30a4f9688f # 여기서 커밋 해시를 지정
 ENV DANGER_SWIFT_REVISION=${DANGER_SWIFT_REVISION}
-RUN git clone --depth=1 -b ${DANGER_SWIFT_REVISION} https://github.com/danger/danger-swift.git ~/danger-swift \
-    && git -C ~/danger-swift rev-parse HEAD > /.danger-swift_revision \
+ENV DANGER_SWIFT_COMMIT=${DANGER_SWIFT_COMMIT}
+
+RUN git clone https://github.com/danger/danger-swift.git ~/danger-swift \
+    && cd ~/danger-swift \
+    && git checkout ${DANGER_SWIFT_COMMIT} \  # 지정한 커밋 해시로 체크아웃
+    && git rev-parse HEAD > /.danger-swift_revision \
     && sed -i -e 's/let isDevelop = true/let isDevelop = false/g' ~/danger-swift/Package.swift \
-    && make -C ~/danger-swift install | tee /var/log/danger-swift-build.log \
+    && make install | tee /var/log/danger-swift-build.log \
     && rm -rf ~/danger-swift
 
 # Install SwiftLint
